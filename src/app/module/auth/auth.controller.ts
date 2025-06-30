@@ -39,7 +39,27 @@ const loginUser = catchAsync(async (req, res) => {
   });
 });
 
+const getProfile = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  const result = await authService.getProfileFromDB(userId);
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "User profile not found",
+      data: null,
+    });
+  }
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User profile retrieved successfully",
+    data: result,
+  });
+});
+
 export const authController = {
   registerUser,
   loginUser,
+  getProfile,
 };

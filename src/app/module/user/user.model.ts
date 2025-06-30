@@ -25,6 +25,8 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: false,
       trim: true,
+      default:
+        "https://i.ibb.co/Q71Xvk0w/illustration-of-human-icon-user-symbol-icon-modern-design-on-blank-background-free-vector.jpg",
     },
   },
   {

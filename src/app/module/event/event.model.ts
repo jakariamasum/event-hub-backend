@@ -9,6 +9,8 @@ const eventSchema = new Schema<IEvent>(
     time: { type: String, required: true, trim: true },
     location: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
+    userId: { type: String, required: true, trim: true },
+    joinedUsers: { type: [String], default: [] },
     attendeeCount: { type: Number, default: 0 },
   },
   {

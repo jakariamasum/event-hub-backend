@@ -16,7 +16,8 @@ const registerUserIntoDB = async (userData: ILogin) => {
     config.jwt_secret!,
     config.jwt_expires!
   );
-  return token;
+  const { password: _removed, ...userWithoutPassword } = newUser.toObject();
+  return { user: userWithoutPassword, token };
 };
 
 const loginUserIntoDB = async (loginData: ILogin) => {
@@ -35,11 +36,27 @@ const loginUserIntoDB = async (loginData: ILogin) => {
     config.jwt_secret!,
     config.jwt_expires!
   );
+  const { password: _removed, ...userWithoutPassword } = user.toObject();
 
-  return token;
+  return { user: userWithoutPassword, token };
+};
+
+const getProfileFromDB = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(404, "User not found");
+  }
+  const { password: _removed, ...userWithoutPassword } = user.toObject();
+  const token = createToken(
+    { id: user._id.toString(), email: user.email },
+    config.jwt_secret!,
+    config.jwt_expires!
+  );
+  return { user: userWithoutPassword, token };
 };
 
 export const authService = {
   registerUserIntoDB,
   loginUserIntoDB,
+  getProfileFromDB,
 };

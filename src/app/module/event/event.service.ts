@@ -4,6 +4,7 @@ import { Event } from "./event.model";
 
 const createEventIntoDB = async (payload: IEvent) => {
   try {
+    console.log("Creating event with payload:", payload);
     const event = await Event.create(payload);
     return event;
   } catch (error) {
@@ -64,10 +65,43 @@ const deleteEventFromDB = async (id: string) => {
   }
 };
 
+const increaseEventAttendeeIntoDB = async (id: string, userId: string) => {
+  try {
+    const event = await Event.findByIdAndUpdate(
+      id,
+      { $inc: { attendeeCount: 1 }, $addToSet: { joinedUsers: userId } },
+      { new: true }
+    );
+    if (!event) {
+      throw new AppError(404, "Event not found");
+    }
+    return event;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError(500, "Failed to increase event views");
+  }
+};
+
+const getUsersEventsFromDB = async (userId: string) => {
+  try {
+    const events = await Event.find({ userId }).sort({
+      createdAt: -1,
+    });
+    return events;
+  } catch (error) {
+    console.error("Error fetching user's events:", error);
+    throw new AppError(500, "Failed to fetch user's events");
+  }
+};
+
 export const eventServices = {
   createEventIntoDB,
   getAllEventsFromDB,
   getEventByIdFromDB,
   updateEventIntoDB,
   deleteEventFromDB,
+  increaseEventAttendeeIntoDB,
+  getUsersEventsFromDB,
 };

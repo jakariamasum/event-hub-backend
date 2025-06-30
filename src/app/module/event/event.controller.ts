@@ -3,6 +3,8 @@ import sendResponse from "../../utils/sendResponse";
 import { eventServices } from "./event.service";
 
 const createEvent = catchAsync(async (req, res) => {
+  const payload = req.body;
+  payload.userId = req.user.id;
   const result = await eventServices.createEventIntoDB(req.body);
 
   if (!result) {
@@ -105,10 +107,54 @@ const deleteEvent = catchAsync(async (req, res) => {
   });
 });
 
+const increaseEventAttendee = catchAsync(async (req, res) => {
+  const eventId = req.params.id;
+  const result = await eventServices.increaseEventAttendeeIntoDB(
+    eventId,
+    req.user.id
+  );
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "Event not found",
+      data: null,
+    });
+  }
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Event views increased successfully",
+    data: result,
+  });
+});
+
+const getUsersEvents = catchAsync(async (req, res) => {
+  const userId = req.user.id;
+  console.log("Fetching events for user:", userId);
+  const result = await eventServices.getUsersEventsFromDB(userId);
+  if (!result) {
+    return sendResponse(res, {
+      statusCode: 404,
+      success: false,
+      message: "No events found for this user",
+      data: null,
+    });
+  }
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User's events fetched successfully",
+    data: result,
+  });
+});
+
 export const eventControllers = {
   createEvent,
   getAllEvents,
   getEventById,
   updateEvent,
   deleteEvent,
+  increaseEventAttendee,
+  getUsersEvents,
 };

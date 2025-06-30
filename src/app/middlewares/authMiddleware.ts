@@ -21,7 +21,6 @@ export const authMiddleware = (
 
   try {
     const decoded = jwt.verify(token, config.jwt_secret!) as JwtPayload;
-    console.log("Decoded JWT:", decoded);
     req.user = decoded;
     next();
   } catch (err) {
