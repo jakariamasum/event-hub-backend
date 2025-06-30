@@ -25,16 +25,14 @@ const createEvent = catchAsync(async (req, res) => {
 });
 
 const getAllEvents = catchAsync(async (req, res) => {
-  const result = await eventServices.getAllEventsFromDB();
+  const { search = "", filter = "all", page = 1, limit = 10 } = req.query;
 
-  if (!result) {
-    return sendResponse(res, {
-      statusCode: 404,
-      success: false,
-      message: "No events found",
-      data: null,
-    });
-  }
+  const result = await eventServices.getAllEventsFromDB(
+    req.query.search as string,
+    req.query.filter as string,
+    Number(page),
+    Number(limit)
+  );
 
   sendResponse(res, {
     statusCode: 200,

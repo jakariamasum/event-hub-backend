@@ -24,7 +24,33 @@ const updateEventSchema = z.object({
   }),
 });
 
+const eventQuerySchema = z.object({
+  body: z.object({
+    search: z.string().optional().default(""),
+    filter: z
+      .enum([
+        "all",
+        "today",
+        "current-week",
+        "last-week",
+        "current-month",
+        "last-month",
+      ])
+      .optional()
+      .default("all"),
+    page: z.preprocess(
+      (val) => Number(val),
+      z.number().int().min(1).default(1)
+    ),
+    limit: z.preprocess(
+      (val) => Number(val),
+      z.number().int().min(1).max(100).default(10)
+    ),
+  }),
+});
+
 export const eventValidationSchema = {
   createEventSchema,
   updateEventSchema,
+  eventQuerySchema,
 };

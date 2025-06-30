@@ -1,6 +1,8 @@
+import { FilterQuery } from "mongoose";
 import AppError from "../../errors/AppError";
 import { IEvent } from "./event.interface";
 import { Event } from "./event.model";
+import moment from "moment";
 
 const createEventIntoDB = async (payload: IEvent) => {
   try {
@@ -12,13 +14,79 @@ const createEventIntoDB = async (payload: IEvent) => {
   }
 };
 
-const getAllEventsFromDB = async () => {
-  try {
-    const events = await Event.find().sort({ createdAt: -1 });
-    return events;
-  } catch (error) {
-    throw new AppError(500, "Failed to fetch events");
+interface PaginatedEvents {
+  events: IEvent[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    pageCount: number;
+  };
+}
+
+const getAllEventsFromDB = async (
+  search: string,
+  filter: string,
+  page: number,
+  limit: number
+): Promise<PaginatedEvents> => {
+  const query: FilterQuery<IEvent> = {};
+
+  if (search) {
+    query.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { name: { $regex: search, $options: "i" } },
+      { location: { $regex: search, $options: "i" } },
+    ];
   }
+
+  const now = moment();
+  let start: Date, end: Date;
+
+  const ranges: Record<string, [Date, Date]> = {
+    today: [
+      now.clone().startOf("day").toDate(),
+      now.clone().endOf("day").toDate(),
+    ],
+    "current-week": [
+      now.clone().startOf("week").toDate(),
+      now.clone().endOf("week").toDate(),
+    ],
+    "last-week": [
+      now.clone().subtract(1, "week").startOf("week").toDate(),
+      now.clone().subtract(1, "week").endOf("week").toDate(),
+    ],
+    "current-month": [
+      now.clone().startOf("month").toDate(),
+      now.clone().endOf("month").toDate(),
+    ],
+    "last-month": [
+      now.clone().subtract(1, "month").startOf("month").toDate(),
+      now.clone().subtract(1, "month").endOf("month").toDate(),
+    ],
+  };
+
+  if (filter !== "all" && ranges[filter]) {
+    [start, end] = ranges[filter];
+    query.date = { $gte: start, $lte: end };
+  }
+
+  const skip = (page - 1) * limit;
+
+  const [events, total] = await Promise.all([
+    Event.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    Event.countDocuments(query),
+  ]);
+
+  return {
+    events,
+    meta: {
+      total,
+      page,
+      limit,
+      pageCount: Math.ceil(total / limit),
+    },
+  };
 };
 
 const getEventByIdFromDB = async (id: string) => {
