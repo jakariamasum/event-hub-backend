@@ -1,6 +1,6 @@
 import { FilterQuery } from "mongoose";
 import AppError from "../../errors/AppError";
-import { IEvent } from "./event.interface";
+import { IEvent, PaginatedEvents } from "./event.interface";
 import { Event } from "./event.model";
 import moment from "moment";
 
@@ -13,16 +13,6 @@ const createEventIntoDB = async (payload: IEvent) => {
     throw new AppError(500, "Failed to create event");
   }
 };
-
-interface PaginatedEvents {
-  events: IEvent[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    pageCount: number;
-  };
-}
 
 const getAllEventsFromDB = async (
   search: string,
@@ -41,33 +31,32 @@ const getAllEventsFromDB = async (
   }
 
   const now = moment();
-  let start: Date, end: Date;
 
-  const ranges: Record<string, [Date, Date]> = {
+  const ranges: Record<string, [string, string]> = {
     today: [
-      now.clone().startOf("day").toDate(),
-      now.clone().endOf("day").toDate(),
+      now.clone().startOf("day").format("YYYY-MM-DD"),
+      now.clone().endOf("day").format("YYYY-MM-DD"),
     ],
     "current-week": [
-      now.clone().startOf("week").toDate(),
-      now.clone().endOf("week").toDate(),
+      now.clone().startOf("week").format("YYYY-MM-DD"),
+      now.clone().endOf("week").format("YYYY-MM-DD"),
     ],
     "last-week": [
-      now.clone().subtract(1, "week").startOf("week").toDate(),
-      now.clone().subtract(1, "week").endOf("week").toDate(),
+      now.clone().subtract(1, "week").startOf("week").format("YYYY-MM-DD"),
+      now.clone().subtract(1, "week").endOf("week").format("YYYY-MM-DD"),
     ],
     "current-month": [
-      now.clone().startOf("month").toDate(),
-      now.clone().endOf("month").toDate(),
+      now.clone().startOf("month").format("YYYY-MM-DD"),
+      now.clone().endOf("month").format("YYYY-MM-DD"),
     ],
     "last-month": [
-      now.clone().subtract(1, "month").startOf("month").toDate(),
-      now.clone().subtract(1, "month").endOf("month").toDate(),
+      now.clone().subtract(1, "month").startOf("month").format("YYYY-MM-DD"),
+      now.clone().subtract(1, "month").endOf("month").format("YYYY-MM-DD"),
     ],
   };
 
   if (filter !== "all" && ranges[filter]) {
-    [start, end] = ranges[filter];
+    const [start, end] = ranges[filter];
     query.date = { $gte: start, $lte: end };
   }
 

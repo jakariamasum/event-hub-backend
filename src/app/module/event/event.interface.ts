@@ -9,3 +9,13 @@ export interface IEvent {
   userId: string;
   attendeeCount?: number;
 }
+
+export interface PaginatedEvents {
+  events: IEvent[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    pageCount: number;
+  };
+}
